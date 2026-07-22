@@ -8,7 +8,7 @@
 ## 문서 지도
 - `docs/README.md` — 문서 계층·정합성 규칙("사실은 한 곳에만")
 - `docs/WORKFLOW.md` — 우리가 일하는 방식(페이즈 루프, DoD, 검증 관문)
-- `docs/decisions/` — ADR: 왜 이렇게 정했나 ([스택](docs/decisions/0002-tech-stack.md) · [교육 방침](docs/decisions/0003-education-policy.md))
+- `docs/decisions/` — ADR: 왜 이렇게 정했나 ([스택](docs/decisions/0002-tech-stack.md) · [교육 방침](docs/decisions/0003-education-policy.md) · [작업 추적 Issue/PR](docs/decisions/0004-work-tracking.md))
 - `docs/glossary.md` — 도메인 용어·데이터 모델 개념
 - `docs/phases/` — 페이즈별 intent + 회고
 

@@ -35,6 +35,22 @@ DoD의 각 줄은 그대로 **검증 절차**가 된다.
 
 > 규칙: "됐다"는 말은 근거와 함께. 테스트가 깨지면 깨졌다고 그대로 말한다.
 
+## 슬라이스 = Issue + 브랜치 + PR (작업 추적 — ADR-0004)
+
+입도 매핑: **Phase = Epic, BUILD 슬라이스 = Task, DoD 체크박스 = 완료 판정.**
+각 슬라이스는 이 한 바퀴를 돈다:
+
+```
+1. Issue 생성     "Phase N · S_: 제목" (본문에 해당 DoD)
+2. 브랜치         git switch -c <슬라이스명>   (SSH github-personal = 개인 계정)
+3. BUILD + VERIFY 구현 → npm run check / 눈 확인
+4. 커밋·푸시      작성자 = sammy0329
+5. PR → merge     PR 본문에 "Closes #N" → Issue 자동 종료
+```
+
+- `main`은 항상 `npm run check` 통과 상태로 보호. 작업은 브랜치에서.
+- **자격증명 주의**: `gh` CLI는 회사 계정 → Issue/PR은 **웹(sammy0329)** 또는 격리된 개인 gh로. git 작업은 SSH `github-personal`. (상세: ADR-0004)
+
 ## 커밋/문서 동기화
 
 - 페이즈가 끝나면 CLAUDE.md 로드맵의 해당 `[ ]`를 `[x]`로.
