@@ -1,0 +1,8 @@
+#!/bin/sh
+# push 전 정적 검사(typecheck + lint)를 로컬에서 강제. (ADR-0005)
+# DB 의존 통합 테스트는 CI가 담당 → pre-push는 빠르고 결정적이게 유지.
+echo "[pre-push] typecheck + lint..."
+npm --prefix backend run typecheck || { echo "✗ typecheck 실패 — push 중단"; exit 1; }
+npm --prefix backend run lint     || { echo "✗ lint 실패 — push 중단"; exit 1; }
+echo "[pre-push] 통과 ✓"
+exit 0
