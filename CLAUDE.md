@@ -52,8 +52,8 @@ GET  /blog/:slug                        글 상세 (공개)
 ```
 backend-study/
   docs/              프로젝트 문서(위 지도 참조)
-  frontend/          Vite + React + TS  (pages: /write, /blog, /blog/:slug) + CLAUDE.md(예정)
-  backend/           Fastify + TS + CLAUDE.md(예정)
+  frontend/          Vite + React + TS  (pages: /write, /blog, /blog/:slug) + CLAUDE.md
+  backend/           Fastify + TS + CLAUDE.md
     src/
       routes/        엔드포인트
       plugins/       db, auth, anthropic
@@ -64,7 +64,7 @@ backend-study/
 > **CLAUDE.md 분리 원칙**: 루트는 헌법. `backend/`, `frontend/`가 생기면 각 폴더에 계층별 CLAUDE.md를 둔다(그 계층에서만 유효한 규칙·명령). Phase 1 스캐폴딩 때 함께 만든다.
 
 ## 학습 로드맵
-- [ ] **Phase 1**: 공개 블로그 목록 화면 — 프론트↔백엔드↔DB 연결 확인 (현재 목표 → `docs/phases/phase-1.md`)
+- [x] **Phase 1**: 공개 블로그 목록 화면 — 프론트↔백엔드↔DB 연결 확인 (✅ 완료 → `docs/phases/phase-1.md`)
 - [ ] **Phase 2**: 글 작성 CRUD + Fastify JSON Schema 검증
 - [ ] **Phase 3**: 태그(N:M 관계)
 - [ ] **Phase 4**: 인증(로그인, JWT) + 작성자/공개 화면 분리
