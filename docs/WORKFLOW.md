@@ -49,7 +49,13 @@ DoD의 각 줄은 그대로 **검증 절차**가 된다.
 ```
 
 - `main`은 항상 `npm run check` 통과 상태로 보호. 작업은 브랜치에서.
-- **자격증명 주의**: `gh` CLI는 회사 계정 → Issue/PR은 **웹(sammy0329)** 또는 격리된 개인 gh로. git 작업은 SSH `github-personal`. (상세: ADR-0004)
+- **커밋/브랜치 형식은 로컬 훅이 자동 강제**(Conventional Commits + 브랜치명). 클론마다 1회: `git config core.hooksPath .githooks`. (ADR-0005)
+- **터미널에서 개인 계정으로 gh 실행**(회사 gh 격리):
+  ```
+  export GH_CONFIG_DIR="C:/Users/Admin/.config/gh-personal"
+  gh issue create / gh pr create / gh pr merge --squash --delete-branch
+  ```
+  git 작업(branch/commit/push)은 SSH `github-personal`. (상세: ADR-0004, ADR-0005)
 
 ## 커밋/문서 동기화
 
