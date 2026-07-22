@@ -21,11 +21,11 @@
 - [x] `docker compose up -d`로 Postgres 16이 뜬다. (S1 — 호스트 5433, 회사 DB 5432와 공존)
 - [x] `npm run db:push`로 스키마가 DB에 반영된다. (S1 — posts 테이블 생성 확인)
 - [x] `npm run db:seed`로 published/draft 섞인 샘플 글이 들어간다. (S1 — published 3, draft 1)
-- [ ] `GET /health`가 200을 반환한다.
-- [ ] `GET /blog`가 **published 글만** 위 계약대로 200 반환 (draft 제외를 테스트로 확인).
-- [ ] **vitest 계약 테스트**: `/blog`가 published만 반환하고 draft를 노출하지 않음을 검증.
-- [ ] 프론트 dev 서버에서 `/blog` 접속 시 그 글 제목들이 렌더된다.
-- [ ] `npm run check`(typecheck + lint + **test**) 통과.
+- [x] `GET /health`가 200을 반환한다. (S2 — `{"status":"ok"}`, 포트 3001)
+- [x] `GET /blog`가 **published 글만** 위 계약대로 200 반환 (draft 제외를 테스트로 확인). (S2 — 3건, 발행일 내림차순)
+- [x] **vitest 계약 테스트**: `/blog`가 published만 반환하고 draft를 노출하지 않음을 검증. (S2)
+- [ ] 프론트 dev 서버에서 `/blog` 접속 시 그 글 제목들이 렌더된다. (S3)
+- [x] `npm run check`(typecheck + lint + **test**) 통과. (S2 — 관문 구성 완료)
 
 ## 결정된 사항 (구 열린 질문)
 1. ✅ 스코프: **목록만**. 상세(`/blog/:slug`)는 Phase 2.
