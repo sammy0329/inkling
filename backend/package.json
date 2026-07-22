@@ -4,17 +4,28 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src test",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm run lint && npm run test",
     "db:push": "drizzle-kit push",
     "db:seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
+    "@fastify/cors": "^11.3.0",
     "drizzle-orm": "^0.45.2",
+    "fastify": "^5.10.0",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^26.1.1",
     "drizzle-kit": "^0.31.10",
+    "eslint": "^10.7.0",
     "tsx": "^4.23.1",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^4.1.10"
   }
 }

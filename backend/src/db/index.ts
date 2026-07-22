@@ -16,3 +16,6 @@ if (!url) throw new Error('DATABASE_URL이 설정되지 않았습니다. backend
 // postgres 드라이버 커넥션. drizzle이 이 위에서 타입세이프 쿼리를 제공.
 const client = postgres(url)
 export const db = drizzle(client, { schema })
+
+// 커넥션 종료(테스트 종료 시 열린 핸들 정리용).
+export const closeDb = () => client.end({ timeout: 5 })
