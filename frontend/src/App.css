@@ -1,0 +1,40 @@
+.container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin: 0 0 1.5rem;
+}
+
+.error {
+  color: #c0392b;
+}
+
+.post-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.post {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border, #e5e5e5);
+}
+
+.post h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+}
+
+.desc {
+  margin: 0 0 0.35rem;
+  opacity: 0.8;
+}
+
+.meta {
+  opacity: 0.55;
+  font-size: 0.85rem;
+}
