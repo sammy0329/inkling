@@ -42,4 +42,8 @@ gh issue create / gh pr create / gh pr merge ...
 
 - 좋아지는 것: 커밋/브랜치 형식이 자동 강제(사람·AI 둘 다), Issue/PR 입력 일관, 터미널에서 개인 계정으로 전체 흐름 자동화.
 - 감수하는 것: 클론마다 `core.hooksPath` 1회 설정 필요. gh 호출 시 `GH_CONFIG_DIR` prefix 필요.
-- 이후(S2, `npm run check` 생기면): pre-push 훅(check 통과해야 push) + GitHub Actions CI + branch protection 추가 → [[phase-1]] S2에서.
+## 추가 (S2-b, `npm run check` 생긴 뒤)
+
+- **GitHub Actions CI** (`.github/workflows/ci.yml`): PR/누적 push 시 Postgres 서비스를 띄워 `db:push`→`db:seed`→`npm run check` 실행. `.env`가 없으므로 `DATABASE_URL`을 job env로 주입(index.ts의 `loadEnvFile()`가 없으면 이 값 사용).
+- **pre-push 훅** (`.githooks/pre-push`): push 전 **정적 검사(typecheck + lint)** 만 로컬 강제 — 빠르고 DB 무관. DB 의존 통합 테스트(vitest)는 CI가 담당(표준 분업).
+- **branch protection**: `main`은 CI `check` 통과해야 merge(strict). `enforce_admins=false`(솔로 안전밸브), 리뷰 미요구. `gh api`로 설정.
