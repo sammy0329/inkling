@@ -10,7 +10,7 @@ export const postStatus = pgEnum('post_status', ['draft', 'published'])
 export const posts = pgTable('posts', {
   id: serial('id').primaryKey(),
   title: text('title').notNull(),
-  slug: text('slug').notNull().unique(), // 공개 상세 URL 식별자 (/blog/:slug, Phase 2)
+  slug: text('slug').unique(), // 발행 시 부여(그 전엔 null). 공개 상세 URL (/blog/:slug). NULL 다중 허용 + unique.
   content: text('content').notNull().default(''), // 마크다운 본문
   description: text('description').notNull().default(''), // 요약(목록/메타용)
   sourceNotes: text('source_notes').notNull().default(''), // 입력 메모 원문

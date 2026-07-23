@@ -33,7 +33,7 @@ const rows = [
   },
   {
     title: '아직 다듬는 중인 초안',
-    slug: 'wip-draft-post',
+    // draft는 slug 없음(발행 시 부여)
     description: '이 글은 draft라 공개 목록에 안 보여야 한다.',
     content: '# 작성 중\n\n공개되면 안 되는 초안.',
     sourceNotes: '거친 메모 상태',
