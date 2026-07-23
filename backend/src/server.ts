@@ -4,12 +4,18 @@ import cors from '@fastify/cors'
 import { fileURLToPath } from 'node:url'
 import { healthRoutes } from './routes/health.ts'
 import { blogRoutes } from './routes/blog.ts'
+import { postsRoutes } from './routes/posts.ts'
 
 export function buildApp() {
-  const app = Fastify({ logger: false })
+  // removeAdditional:false → 정의 밖 필드를 제거하지 않고 400으로 거부(엄격한 계약).
+  const app = Fastify({
+    logger: false,
+    ajv: { customOptions: { removeAdditional: false } },
+  })
   app.register(cors) // 프론트(다른 origin)에서 fetch 허용 — 계층 분리(ADR-0003)
   app.register(healthRoutes)
   app.register(blogRoutes)
+  app.register(postsRoutes)
   return app
 }
 
