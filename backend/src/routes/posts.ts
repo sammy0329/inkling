@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { desc, eq } from 'drizzle-orm'
 import { db } from '../db/index.ts'
 import { posts } from '../db/schema.ts'
+import { setPostTags, tagsByPostIds, tagsForPost } from '../db/tags.ts'
 import {
   createPostBody,
   errorResponse,
@@ -11,19 +12,27 @@ import {
 } from '../schemas/post.ts'
 import { slugify } from '../lib/slug.ts'
 
-// 작성자용 글 CRUD (인증은 Phase 4 — 지금은 소유자 없음).
+type PostRow = typeof posts.$inferSelect
+type PostBody = Partial<{
+  title: string
+  content: string
+  description: string
+  sourceNotes: string
+  tags: string[]
+}>
+
+function withTags(post: PostRow, tagNames: string[]) {
+  return { ...post, tags: tagNames }
+}
+
+// 작성자용 글 CRUD (인증은 Phase 4).
 export async function postsRoutes(app: FastifyInstance) {
   // 생성 → draft
   app.post(
     '/posts',
     { schema: { body: createPostBody, response: { 201: postResponse } } },
     async (req, reply) => {
-      const body = req.body as {
-        title?: string
-        content?: string
-        description?: string
-        sourceNotes?: string
-      }
+      const body = req.body as PostBody
       const [created] = await db
         .insert(posts)
         .values({
@@ -33,8 +42,9 @@ export async function postsRoutes(app: FastifyInstance) {
           sourceNotes: body.sourceNotes ?? '',
         })
         .returning()
+      if (body.tags) await setPostTags(created.id, body.tags)
       reply.code(201)
-      return created
+      return withTags(created, await tagsForPost(created.id))
     },
   )
 
@@ -43,7 +53,9 @@ export async function postsRoutes(app: FastifyInstance) {
     '/posts',
     { schema: { response: { 200: { type: 'array', items: postResponse } } } },
     async () => {
-      return db.select().from(posts).orderBy(desc(posts.createdAt))
+      const rows = await db.select().from(posts).orderBy(desc(posts.createdAt))
+      const tagMap = await tagsByPostIds(rows.map((r) => r.id))
+      return rows.map((r) => withTags(r, tagMap.get(r.id) ?? []))
     },
   )
 
@@ -55,25 +67,29 @@ export async function postsRoutes(app: FastifyInstance) {
       const { id } = req.params as { id: number }
       const [post] = await db.select().from(posts).where(eq(posts.id, id))
       if (!post) return reply.code(404).send({ message: 'post not found' })
-      return post
+      return withTags(post, await tagsForPost(id))
     },
   )
 
-  // 부분 수정
+  // 부분 수정 (tags 제공 시 링크 교체)
   app.patch(
     '/posts/:id',
     { schema: { params: idParams, body: updatePostBody, response: { 200: postResponse, 404: errorResponse } } },
     async (req, reply) => {
       const { id } = req.params as { id: number }
-      const body = req.body as Partial<{
-        title: string
-        content: string
-        description: string
-        sourceNotes: string
-      }>
-      const [updated] = await db.update(posts).set(body).where(eq(posts.id, id)).returning()
+      const { tags, ...fields } = req.body as PostBody
+
+      let updated: PostRow | undefined
+      if (Object.keys(fields).length > 0) {
+        const rows = await db.update(posts).set(fields).where(eq(posts.id, id)).returning()
+        updated = rows[0]
+      } else {
+        const rows = await db.select().from(posts).where(eq(posts.id, id))
+        updated = rows[0]
+      }
       if (!updated) return reply.code(404).send({ message: 'post not found' })
-      return updated
+      if (tags) await setPostTags(id, tags)
+      return withTags(updated, await tagsForPost(id))
     },
   )
 
@@ -85,9 +101,8 @@ export async function postsRoutes(app: FastifyInstance) {
       const { id } = req.params as { id: number }
       const [post] = await db.select().from(posts).where(eq(posts.id, id))
       if (!post) return reply.code(404).send({ message: 'post not found' })
-      if (post.status === 'published') return post // 멱등: 이미 발행됨
+      if (post.status === 'published') return withTags(post, await tagsForPost(id)) // 멱등
 
-      // slug 생성 + 유니크 보장(이미 있으면 -id 붙임)
       const base = slugify(post.title) || `post-${post.id}`
       let slug = base
       const [clash] = await db.select({ id: posts.id }).from(posts).where(eq(posts.slug, slug))
@@ -98,11 +113,11 @@ export async function postsRoutes(app: FastifyInstance) {
         .set({ status: 'published', publishedAt: new Date(), slug })
         .where(eq(posts.id, id))
         .returning()
-      return published
+      return withTags(published, await tagsForPost(id))
     },
   )
 
-  // 삭제
+  // 삭제 (post_tags는 FK cascade로 함께 삭제)
   app.delete(
     '/posts/:id',
     {

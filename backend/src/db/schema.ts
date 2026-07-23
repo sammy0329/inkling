@@ -1,6 +1,6 @@
 // Drizzle 스키마 = "테이블을 TypeScript로 선언" → db:push가 이 선언을 실제 DB 테이블로 만든다.
 // 이 파일이 posts 구조의 진실원(single source of truth). 문서는 이걸 설명만 함.
-import { pgTable, serial, text, timestamp, pgEnum } from 'drizzle-orm/pg-core'
+import { pgTable, serial, text, timestamp, pgEnum, integer, primaryKey } from 'drizzle-orm/pg-core'
 
 // 글 상태 enum (glossary.md 참조). DB 레벨에서 draft|published만 허용.
 export const postStatus = pgEnum('post_status', ['draft', 'published'])
@@ -18,3 +18,22 @@ export const posts = pgTable('posts', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   publishedAt: timestamp('published_at', { withTimezone: true }), // 발행 시각(미발행이면 null)
 })
+
+// 태그 (Phase 3). posts와 N:M — post_tags 중간 테이블로 연결.
+export const tags = pgTable('tags', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull().unique(),
+})
+
+export const postTags = pgTable(
+  'post_tags',
+  {
+    postId: integer('post_id')
+      .notNull()
+      .references(() => posts.id, { onDelete: 'cascade' }), // 글 삭제 시 링크도 삭제
+    tagId: integer('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.postId, t.tagId] })], // 같은 (post,tag) 중복 방지
+)
