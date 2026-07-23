@@ -2,7 +2,14 @@ import type { FastifyInstance } from 'fastify'
 import { desc, eq } from 'drizzle-orm'
 import { db } from '../db/index.ts'
 import { posts } from '../db/schema.ts'
-import { createPostBody, errorResponse, idParams, postResponse } from '../schemas/post.ts'
+import {
+  createPostBody,
+  errorResponse,
+  idParams,
+  postResponse,
+  updatePostBody,
+} from '../schemas/post.ts'
+import { slugify } from '../lib/slug.ts'
 
 // 작성자용 글 CRUD (인증은 Phase 4 — 지금은 소유자 없음).
 export async function postsRoutes(app: FastifyInstance) {
@@ -49,6 +56,69 @@ export async function postsRoutes(app: FastifyInstance) {
       const [post] = await db.select().from(posts).where(eq(posts.id, id))
       if (!post) return reply.code(404).send({ message: 'post not found' })
       return post
+    },
+  )
+
+  // 부분 수정
+  app.patch(
+    '/posts/:id',
+    { schema: { params: idParams, body: updatePostBody, response: { 200: postResponse, 404: errorResponse } } },
+    async (req, reply) => {
+      const { id } = req.params as { id: number }
+      const body = req.body as Partial<{
+        title: string
+        content: string
+        description: string
+        sourceNotes: string
+      }>
+      const [updated] = await db.update(posts).set(body).where(eq(posts.id, id)).returning()
+      if (!updated) return reply.code(404).send({ message: 'post not found' })
+      return updated
+    },
+  )
+
+  // 발행: draft → published, slug 자동 부여
+  app.post(
+    '/posts/:id/publish',
+    { schema: { params: idParams, response: { 200: postResponse, 404: errorResponse } } },
+    async (req, reply) => {
+      const { id } = req.params as { id: number }
+      const [post] = await db.select().from(posts).where(eq(posts.id, id))
+      if (!post) return reply.code(404).send({ message: 'post not found' })
+      if (post.status === 'published') return post // 멱등: 이미 발행됨
+
+      // slug 생성 + 유니크 보장(이미 있으면 -id 붙임)
+      const base = slugify(post.title) || `post-${post.id}`
+      let slug = base
+      const [clash] = await db.select({ id: posts.id }).from(posts).where(eq(posts.slug, slug))
+      if (clash && clash.id !== post.id) slug = `${base}-${post.id}`
+
+      const [published] = await db
+        .update(posts)
+        .set({ status: 'published', publishedAt: new Date(), slug })
+        .where(eq(posts.id, id))
+        .returning()
+      return published
+    },
+  )
+
+  // 삭제
+  app.delete(
+    '/posts/:id',
+    {
+      schema: {
+        params: idParams,
+        response: {
+          200: { type: 'object', properties: { deleted: { type: 'boolean' } }, required: ['deleted'] },
+          404: errorResponse,
+        },
+      },
+    },
+    async (req, reply) => {
+      const { id } = req.params as { id: number }
+      const deleted = await db.delete(posts).where(eq(posts.id, id)).returning({ id: posts.id })
+      if (deleted.length === 0) return reply.code(404).send({ message: 'post not found' })
+      return { deleted: true }
     },
   )
 }

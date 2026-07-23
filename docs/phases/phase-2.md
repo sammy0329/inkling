@@ -1,7 +1,7 @@
 # Phase 2 — 글 작성 CRUD + Fastify JSON Schema 검증
 
-- 상태: 진행중 (INTENT 확정 2026-07-22 — BUILD로)
-- 기간: 2026-07-22 ~
+- 상태: ✅ 완료 (S1·S2)
+- 기간: 2026-07-22
 
 > 목적: 작성자가 글을 만들고 → 편집 → 발행하는 흐름을, **Fastify JSON Schema 검증**으로 계약을 강제하며 구현. Phase 2는 **백엔드 + 테스트**에 집중(프론트 /write는 후속).
 
@@ -26,11 +26,11 @@
 공개 `/blog`(published 목록)는 Phase 1에서 완료.
 
 ## 완료 기준 (DoD) — 초안
-- [ ] 각 엔드포인트에 body/params/response **JSON Schema** 부착, Fastify가 검증.
+- [x] 각 엔드포인트에 body/params/response **JSON Schema** 부착, Fastify가 검증. (S1·S2)
 - [x] 잘못된 body(필수 누락/타입 오류)는 **400** 반환(테스트로 확인). (S1 — removeAdditional:false로 엄격 계약)
-- [ ] vitest 계약 테스트: 생성→조회→수정→발행 흐름 + draft가 /blog엔 안 뜨고 발행 후 뜬다.
-- [ ] `npm run check` 통과.
-- [ ] (프론트 포함 시) 브라우저 `/write`에서 글 작성·발행 확인.
+- [x] vitest 계약 테스트: 생성→조회→수정→발행 흐름 + draft가 /blog엔 안 뜨고 발행 후 뜬다. (S2 — 10 tests)
+- [x] `npm run check` 통과. (S2)
+- [–] 프론트 `/write` — Phase 2 범위 밖(후속 페이즈).
 
 ## 결정된 사항 (구 열린 질문)
 1. ✅ 범위: **백엔드 + 테스트만**. 프론트 `/write`는 후속 페이즈.
@@ -44,7 +44,16 @@
 
 ---
 
-## 회고 (페이즈 종료 후 작성)
-- 무엇을 배웠나:
-- 다음에 바꿀 것:
-- 남긴 ADR:
+## 회고
+**무엇을 배웠나**
+- **Fastify JSON Schema가 계약을 강제**: body/params 검증(위반 시 자동 400) + response 직렬화(스키마 밖 필드 제거). `reply.code`도 response 스키마의 선언 코드로 타입 제한됨 → 404 쓰려면 404 스키마 선언.
+- **`removeAdditional:false`로 엄격 계약**: 기본값은 정의 밖 필드를 조용히 제거 → 400이 안 남. 끄니 계약 위반이 드러남.
+- **slug 유니크 보장**: title→kebab(유니코드/한글 유지), 충돌 시 `-id` 접미. 발행은 멱등(이미 published면 no-op).
+- **통합 테스트의 크로스파일 DB 오염**: publish 테스트가 published를 추가하니 blog.test의 "정확히 3건" 단언이 깨짐 → 개수 의존을 없애고 슬러그 포함/제외로 검증(= Phase 1 회고 항목 해결).
+
+**다음에 바꿀 것**
+- 상태 전이 규칙 확장(발행 취소/재발행) 미정 — 필요 시 ADR.
+- 테스트가 DB에 글을 누적 → 파일별 트랜잭션 롤백 등으로 격리 고려.
+- 프론트 `/write` 작성·발행 UI는 후속 페이즈.
+
+**남긴 ADR**: 없음(요청 검증은 스택 결정(ADR-0002) 범위 내).
