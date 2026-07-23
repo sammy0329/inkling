@@ -28,5 +28,14 @@ cd frontend && npm install && npm run dev     # 프론트 :5175 → 브라우저
 | backend | 3001 |
 | frontend | 5175 |
 
+## 기능
+- 공개 블로그 목록/상세(마크다운), 태그 필터
+- 회원가입·로그인(JWT), 작성자별 소유권
+- 글 CRUD(생성/수정/발행/삭제) + Fastify JSON Schema 검증
+- 메모 → AI 초안 생성(현재 mock, 실 Anthropic SDK 교체 지점 준비)
+
+## 사용 흐름
+`/login`에서 가입·로그인 → `/write`에서 메모 입력 → **AI 초안 생성** → 편집 → 저장/**발행** → `/blog`에 공개.
+
 ## 진행 상황
-학습 로드맵(Phase 1~5)과 페이즈별 계획은 [`docs/phases/`](docs/phases/), 현재 **Phase 1(공개 블로그 목록) 완료**.
+학습 로드맵(Phase 1~5) **전부 완료**. 페이즈별 계획·회고는 [`docs/phases/`](docs/phases/), 결정은 [`docs/decisions/`](docs/decisions/).
