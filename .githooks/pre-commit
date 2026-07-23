@@ -1,0 +1,14 @@
+#!/bin/sh
+# 현재 브랜치명이 규칙에 맞는지 검증. (ADR-0005)
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+[ -z "$branch" ] && exit 0          # detached HEAD 등은 통과
+[ "$branch" = "main" ] && exit 0    # main은 허용(부트스트랩/merge)
+
+if printf '%s' "$branch" | grep -Eq '^(s[0-9]+-[a-z0-9-]+|(feat|fix|docs|chore|refactor|test|ci)/[a-z0-9-]+)$'; then
+  exit 0
+fi
+
+echo "✗ 브랜치명 규칙 위반: $branch  (ADR-0005)"
+echo "  허용: s<번호>-<설명>  또는  <type>/<설명>"
+echo "  예:   s2-api-blog,  chore/github-harness"
+exit 1

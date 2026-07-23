@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    # 계약 테스트가 실제 DB를 치므로 Postgres 서비스를 띄운다.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: inkling
+          POSTGRES_PASSWORD: inkling
+          POSTGRES_DB: inkling
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U inkling -d inkling"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      # .env는 커밋 안 됨 → CI는 서비스 DB(localhost:5432)를 직접 주입.
+      # index.ts의 loadEnvFile()는 .env 없으면 이 값을 사용.
+      DATABASE_URL: postgres://inkling:inkling@localhost:5432/inkling
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm run db:push
+      - run: npm run db:seed
+      - run: npm run check
