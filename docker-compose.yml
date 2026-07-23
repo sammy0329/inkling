@@ -1,0 +1,23 @@
+# inkling 로컬 개발용 PostgreSQL.
+# 앱(backend)은 컨테이너 밖(호스트)에서 tsx로 돌고, DB만 컨테이너로 띄운다.
+# → "DB는 격리, 앱은 빠른 반복" — 교육 방침(계층 분리)과도 맞음.
+services:
+  db:
+    image: postgres:16
+    container_name: inkling-db
+    environment:
+      POSTGRES_USER: inkling
+      POSTGRES_PASSWORD: inkling
+      POSTGRES_DB: inkling
+    ports:
+      - "5433:5432" # 호스트 5433 → 컨테이너 5432. (로컬에서 5432가 이미 점유될 수 있어 회피)
+    volumes:
+      - inkling-pgdata:/var/lib/postgresql/data # 컨테이너 지워도 데이터 유지.
+    healthcheck: # DB가 "연결 가능" 상태인지 판정 → 나중에 앱이 이걸 기다릴 수 있음.
+      test: ["CMD-SHELL", "pg_isready -U inkling -d inkling"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  inkling-pgdata:
