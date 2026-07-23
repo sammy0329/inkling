@@ -65,7 +65,7 @@ backend-study/
 
 ## 학습 로드맵
 - [x] **Phase 1**: 공개 블로그 목록 화면 — 프론트↔백엔드↔DB 연결 확인 (✅ 완료 → `docs/phases/phase-1.md`)
-- [ ] **Phase 2**: 글 작성 CRUD + Fastify JSON Schema 검증
+- [x] **Phase 2**: 글 작성 CRUD + Fastify JSON Schema 검증 (✅ 완료 → `docs/phases/phase-2.md`)
 - [ ] **Phase 3**: 태그(N:M 관계)
 - [ ] **Phase 4**: 인증(로그인, JWT) + 작성자/공개 화면 분리
 - [ ] **Phase 5**: AI 초안 생성 (Anthropic SDK, 스트리밍 렌더링)
