@@ -5,17 +5,20 @@
 ## 실행
 ```bash
 npm install
-npm run dev      # :5175 (백엔드 :3001이 떠 있어야 목록이 뜸)
+npm run dev      # :5175 (백엔드 :3001이 떠 있어야 함)
 npm run build    # tsc -b + vite build
 npm run lint     # oxlint
 ```
 
 ## 구조
-- `src/App.tsx` — GET /blog fetch → published 목록 렌더(loading/error/empty 처리)
-- `src/{App.css,index.css}`, `index.html`, `vite.config.ts`(port 5175 고정)
+- `src/main.tsx` — react-router 라우팅(`/blog`, `/blog/:slug`, `/login`, `/write`)
+- `src/App.tsx` — 레이아웃(내비 + `<Outlet/>`)
+- `src/api.ts` — fetch 래퍼(자동 JWT 헤더), 모든 백엔드 호출
+- `src/auth.ts` — JWT localStorage 보관, `src/types.ts` — 응답 타입
+- `src/pages/` — `BlogList`, `BlogDetail`(react-markdown), `Login`, `Write`(메모→generate→편집→저장/발행/삭제)
 
 ## 규칙
-- 백엔드 주소 `API_URL`은 `App.tsx` 상수(`http://localhost:3001`). 나중에 env로 뺄 수 있음.
+- 모든 백엔드 호출은 `api.ts`를 거친다(주소·인증 헤더 일원화). `API_URL='http://localhost:3001'`.
+- 인증 필요한 API는 로그인 후 사용(토큰 없으면 백엔드가 401). 응답 계약(`types.ts`)은 백엔드와 일치시킬 것(백엔드가 진실원).
 - 포트 **5175** 고정 — 기본 포트(5173/5174) 점유 회피.
-- 응답 계약(`Post` 타입)은 백엔드 `GET /blog`와 **일치**시킬 것(백엔드가 진실원).
-- 현재 CI/로컬 훅은 **백엔드만** 포함. 프론트 검사 편입은 후속 정리 대상.
+- CI: 프론트 job(lint+build)이 PR마다 실행됨.
