@@ -19,6 +19,14 @@ export const posts = pgTable('posts', {
   publishedAt: timestamp('published_at', { withTimezone: true }), // 발행 시각(미발행이면 null)
 })
 
+// 사용자 (Phase 4). 비밀번호는 해시로만 저장.
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 // 태그 (Phase 3). posts와 N:M — post_tags 중간 테이블로 연결.
 export const tags = pgTable('tags', {
   id: serial('id').primaryKey(),
