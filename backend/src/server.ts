@@ -7,6 +7,7 @@ import { healthRoutes } from './routes/health.ts'
 import { blogRoutes } from './routes/blog.ts'
 import { postsRoutes } from './routes/posts.ts'
 import { authRoutes } from './routes/auth.ts'
+import { generateRoutes } from './routes/generate.ts'
 
 export function buildApp() {
   // removeAdditional:false → 정의 밖 필드를 제거하지 않고 400으로 거부(엄격한 계약).
@@ -20,6 +21,7 @@ export function buildApp() {
   app.register(blogRoutes)
   app.register(authRoutes)
   app.register(postsRoutes)
+  app.register(generateRoutes)
   return app
 }
 
