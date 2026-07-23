@@ -14,6 +14,7 @@ export const posts = pgTable('posts', {
   content: text('content').notNull().default(''), // 마크다운 본문
   description: text('description').notNull().default(''), // 요약(목록/메타용)
   sourceNotes: text('source_notes').notNull().default(''), // 입력 메모 원문
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }), // 작성자(Phase 4). 기존 글은 null.
   status: postStatus('status').notNull().default('draft'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   publishedAt: timestamp('published_at', { withTimezone: true }), // 발행 시각(미발행이면 null)

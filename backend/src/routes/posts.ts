@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { desc, eq } from 'drizzle-orm'
+import { and, desc, eq } from 'drizzle-orm'
 import { db } from '../db/index.ts'
 import { posts } from '../db/schema.ts'
 import { setPostTags, tagsByPostIds, tagsForPost } from '../db/tags.ts'
@@ -11,6 +11,7 @@ import {
   updatePostBody,
 } from '../schemas/post.ts'
 import { slugify } from '../lib/slug.ts'
+import { requireAuth } from '../plugins/auth.ts'
 
 type PostRow = typeof posts.$inferSelect
 type PostBody = Partial<{
@@ -25,9 +26,11 @@ function withTags(post: PostRow, tagNames: string[]) {
   return { ...post, tags: tagNames }
 }
 
-// 작성자용 글 CRUD (인증은 Phase 4).
+// 작성자용 글 CRUD — 전부 인증 필요, 본인 글만 접근.
 export async function postsRoutes(app: FastifyInstance) {
-  // 생성 → draft
+  app.addHook('preHandler', requireAuth) // 이 플러그인의 모든 라우트 보호
+
+  // 생성 → draft (작성자 = 현재 사용자)
   app.post(
     '/posts',
     { schema: { body: createPostBody, response: { 201: postResponse } } },
@@ -40,6 +43,7 @@ export async function postsRoutes(app: FastifyInstance) {
           content: body.content ?? '',
           description: body.description ?? '',
           sourceNotes: body.sourceNotes ?? '',
+          userId: req.user.userId,
         })
         .returning()
       if (body.tags) await setPostTags(created.id, body.tags)
@@ -48,43 +52,51 @@ export async function postsRoutes(app: FastifyInstance) {
     },
   )
 
-  // 작성자 뷰: 전체(draft 포함), 최신 생성순
+  // 본인 글 목록(draft 포함), 최신 생성순
   app.get(
     '/posts',
     { schema: { response: { 200: { type: 'array', items: postResponse } } } },
-    async () => {
-      const rows = await db.select().from(posts).orderBy(desc(posts.createdAt))
+    async (req) => {
+      const rows = await db
+        .select()
+        .from(posts)
+        .where(eq(posts.userId, req.user.userId))
+        .orderBy(desc(posts.createdAt))
       const tagMap = await tagsByPostIds(rows.map((r) => r.id))
       return rows.map((r) => withTags(r, tagMap.get(r.id) ?? []))
     },
   )
 
-  // 단건(편집용)
+  // 본인 글 단건
   app.get(
     '/posts/:id',
     { schema: { params: idParams, response: { 200: postResponse, 404: errorResponse } } },
     async (req, reply) => {
       const { id } = req.params as { id: number }
-      const [post] = await db.select().from(posts).where(eq(posts.id, id))
+      const [post] = await db
+        .select()
+        .from(posts)
+        .where(and(eq(posts.id, id), eq(posts.userId, req.user.userId)))
       if (!post) return reply.code(404).send({ message: 'post not found' })
       return withTags(post, await tagsForPost(id))
     },
   )
 
-  // 부분 수정 (tags 제공 시 링크 교체)
+  // 부분 수정 (본인 글만)
   app.patch(
     '/posts/:id',
     { schema: { params: idParams, body: updatePostBody, response: { 200: postResponse, 404: errorResponse } } },
     async (req, reply) => {
       const { id } = req.params as { id: number }
+      const owned = and(eq(posts.id, id), eq(posts.userId, req.user.userId))
       const { tags, ...fields } = req.body as PostBody
 
       let updated: PostRow | undefined
       if (Object.keys(fields).length > 0) {
-        const rows = await db.update(posts).set(fields).where(eq(posts.id, id)).returning()
+        const rows = await db.update(posts).set(fields).where(owned).returning()
         updated = rows[0]
       } else {
-        const rows = await db.select().from(posts).where(eq(posts.id, id))
+        const rows = await db.select().from(posts).where(owned)
         updated = rows[0]
       }
       if (!updated) return reply.code(404).send({ message: 'post not found' })
@@ -93,13 +105,14 @@ export async function postsRoutes(app: FastifyInstance) {
     },
   )
 
-  // 발행: draft → published, slug 자동 부여
+  // 발행 (본인 글만): draft → published, slug 자동
   app.post(
     '/posts/:id/publish',
     { schema: { params: idParams, response: { 200: postResponse, 404: errorResponse } } },
     async (req, reply) => {
       const { id } = req.params as { id: number }
-      const [post] = await db.select().from(posts).where(eq(posts.id, id))
+      const owned = and(eq(posts.id, id), eq(posts.userId, req.user.userId))
+      const [post] = await db.select().from(posts).where(owned)
       if (!post) return reply.code(404).send({ message: 'post not found' })
       if (post.status === 'published') return withTags(post, await tagsForPost(id)) // 멱등
 
@@ -111,13 +124,13 @@ export async function postsRoutes(app: FastifyInstance) {
       const [published] = await db
         .update(posts)
         .set({ status: 'published', publishedAt: new Date(), slug })
-        .where(eq(posts.id, id))
+        .where(owned)
         .returning()
       return withTags(published, await tagsForPost(id))
     },
   )
 
-  // 삭제 (post_tags는 FK cascade로 함께 삭제)
+  // 삭제 (본인 글만)
   app.delete(
     '/posts/:id',
     {
@@ -131,7 +144,10 @@ export async function postsRoutes(app: FastifyInstance) {
     },
     async (req, reply) => {
       const { id } = req.params as { id: number }
-      const deleted = await db.delete(posts).where(eq(posts.id, id)).returning({ id: posts.id })
+      const deleted = await db
+        .delete(posts)
+        .where(and(eq(posts.id, id), eq(posts.userId, req.user.userId)))
+        .returning({ id: posts.id })
       if (deleted.length === 0) return reply.code(404).send({ message: 'post not found' })
       return { deleted: true }
     },
