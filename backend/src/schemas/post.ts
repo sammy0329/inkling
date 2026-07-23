@@ -14,6 +14,7 @@ export const postResponse = {
     status: { type: 'string', enum: ['draft', 'published'] },
     createdAt: { type: 'string', format: 'date-time' },
     publishedAt: { type: ['string', 'null'], format: 'date-time' },
+    tags: { type: 'array', items: { type: 'string' } },
   },
   required: ['id', 'title', 'status'],
 }
@@ -27,6 +28,7 @@ export const createPostBody = {
     content: { type: 'string' },
     description: { type: 'string' },
     sourceNotes: { type: 'string' },
+    tags: { type: 'array', items: { type: 'string' } },
   },
 }
 
@@ -40,6 +42,7 @@ export const updatePostBody = {
     content: { type: 'string' },
     description: { type: 'string' },
     sourceNotes: { type: 'string' },
+    tags: { type: 'array', items: { type: 'string' } },
   },
 }
 
